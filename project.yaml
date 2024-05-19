@@ -1,0 +1,7 @@
+title: Simple Webviz example
+
+pages:
+
+  - title: Front page
+    content:
+      - Heatmap:

@@ -1,0 +1,2 @@
+[webviz_config_plugins]
+Heatmap = plugins.main:Heatmap
