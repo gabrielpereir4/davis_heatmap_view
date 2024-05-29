@@ -3,12 +3,13 @@ import plotly.express as px
 import plotly.graph_objs as go
 from dash import Dash, html, dcc, Input, Output
 
+# Classe para construir o Heatmap. Como estamos trabalhando com Heatmaps iguais, a classe encapsula a configuração dos gráficos.
 
 class HeatmapBuild:
-    def __init__(self, data, title='Poços x Modelos', initial_colorscale='turbo', xaxis='Poços', yaxis='Modelos'):
+    def __init__(self, data, title='Poços x Modelos', colorscale='turbo', xaxis='Poços', yaxis='Modelos'):
         self.__data = data
         self.__title = title
-        self.__initial_colorsscale = initial_colorscale
+        self.__colorscale = colorscale
         self.__xaxis = xaxis
         self.__yaxis = yaxis
         self.__layout = go.Layout(
@@ -16,7 +17,11 @@ class HeatmapBuild:
                 xaxis=dict(title= self.__xaxis),
                 yaxis=dict(title= self.__yaxis)
             )
-        self.__heatmap = go.Heatmap()
+        self.__heatmap = go.Heatmap(
+                z=data,
+                colorscale=colorscale,
+                colorbar=dict(title='Precisão'),
+                )
 
 
     @property
@@ -31,8 +36,7 @@ class HeatmapBuild:
     def heatmap(self):
         return self.__heatmap
             
-    def buildHeatmap(self, id):
-        return dcc.Graph(
-                id= id,
-                figure={'data': [self.heatmap], 'layout': self.layout}
+    def buildHeatmap(self):
+        return go.Figure(
+                data=[self.heatmap], layout=self.layout
             )

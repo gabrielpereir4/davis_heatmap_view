@@ -1,7 +1,7 @@
-title: Simple Webviz example
+title: NQDS Heatmap
 
 pages:
 
-  - title: Front page
+  - title: NQDS Heatmap
     content:
       - Heatmap:

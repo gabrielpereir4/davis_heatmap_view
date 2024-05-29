@@ -5,6 +5,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objs as go
 
+from model.heatmapbuild import HeatmapBuild
+
 
 rows = 15
 cols = 15 # Qntd de valores
@@ -17,6 +19,20 @@ df = pd.DataFrame(data, columns=[x for x in range(0, 15)], index=[x for x in ran
 hovertext = [[f'Modelo: {df.index[row]}, Poço: {df.columns[col]}, NQDS: {df[row][col]:.2f}' for col in range(cols)] for row in range(rows)]
 color_scales = px.colors.named_colorscales()
 checklist_options = [{'label': column, 'value': column} for column in df.columns]
+
+# go.Layout se refere a configurações de eixos, legendas, títulos do gráfico
+
+heatmap_layout = go.Layout(
+                title='Gráfico Poços X Modelos',
+                xaxis=dict(title='Poços'),
+                yaxis=dict(title='Modelos')
+            )
+
+# go.Heatmap diz respeito a configurações do heatmap, como seus dados, eixo de cores, etc
+
+heatmap_heatmap = go.Heatmap()
+    
+
 
 class Heatmap(WebvizPluginABC):
 
@@ -70,21 +86,8 @@ class Heatmap(WebvizPluginABC):
         )
         def update_figure(colorscale, selecao):
             df_filter = df[selecao]
-
-            heatmap = go.Heatmap(
-                # Z representa os dados do heatmap
-                z=df_filter,
-                colorscale=colorscale,
-                colorbar=dict(title='Precisão'),
-                hovertext=hovertext
-
-            )
-            layout = go.Layout(
-                title='Gráfico Poços X Modelos',
-                xaxis=dict(title='Poços'),
-                yaxis=dict(title='Modelos')
-            )
-            return {'data': [heatmap], 'layout': layout}
+            heatmap = HeatmapBuild(df_filter, colorscale=colorscale)
+            return heatmap.buildHeatmap()
         
         @app.callback(
         Output('novoheatmap', 'children'),
@@ -102,11 +105,7 @@ class Heatmap(WebvizPluginABC):
                     hovertext=hovertext
 
                 )
-                layout = go.Layout(
-                    title='Gráfico Poços X Modelos 2',
-                    xaxis=dict(title='Poços'),
-                    yaxis=dict(title='Modelos')
-                )
+                layout = heatmap_layout
                 return dcc.Graph(
                     id='extra-heatmap-graph',
                     figure={'data': [heatmap], 'layout': layout}
