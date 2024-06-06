@@ -8,17 +8,16 @@ import plotly.graph_objs as go
 from model.heatmapbuild import HeatmapBuild
 
 
-rows = 15
+rows = 20
 cols = 15 # Qntd de valores
 # Gerando os valores aleatórios
 data = np.random.rand(rows, cols)
 
 # Criando o DataFrame
-df = pd.DataFrame(data, columns=[x for x in range(0, 15)], index=[x for x in range(0, 15)])
+df = pd.DataFrame(data, columns=[x for x in range(0, 15)], index=[x for x in range(0, 20)])
 # Criar o texto de hover para cada célula do heatmap
-hovertext = [[f'Modelo: {df.index[row]}, Poço: {df.columns[col]}, NQDS: {df[row][col]:.2f}' for col in range(cols)] for row in range(rows)]
 color_scales = px.colors.named_colorscales()
-checklist_options = [{'label': column, 'value': column} for column in df.columns]
+checklist_options = [{'label': column, 'value': int(column)} for column in df.columns]
 
 # go.Layout se refere a configurações de eixos, legendas, títulos do gráfico
 
@@ -33,7 +32,6 @@ heatmap_layout = go.Layout(
 heatmap_heatmap = go.Heatmap()
     
 
-
 class Heatmap(WebvizPluginABC):
 
     def __init__(self, app):
@@ -47,32 +45,47 @@ class Heatmap(WebvizPluginABC):
         return html.Div([
             html.Div([
                 html.H1("Gráfico Heatmap"),
-                html.H3('Seleção de Cores:'),
+                html.P('Seleção de Cores:'),
                 dcc.Dropdown(
                 id='color-scale-dropdown',
                 options=[{'label': scale, 'value': scale} for scale in color_scales],
                 value="turbo",
                 style={'width': '200px'}
                 ),
-                html.P("Seleção de Poços", style={'margin-bottom': '0px'}),
-                dcc.Checklist(
-                    id='filtro',
-                    options=checklist_options,
-                    value=[column['value'] for column in checklist_options],
-                    inline=True,
-                    style={'margin-top': '16px'}
+                html.Div([
+                    html.Div([
+                        html.P("Seleção de Poços", style={'margin-bottom': '0px'}),
+                        dcc.Checklist(
+                            id='filtro',
+                            options=checklist_options,
+                            value=[column['value'] for column in checklist_options],
+                            inline=True,
+                            style={'margin-top': '16px'}
+                        ),
+                    ],
+                    style={'display': 'flex', 'flex-direction': 'column', 'width': '200px'}
+                    ),
+                    html.Div([
+                        html.P("Seleção de Modelos", style={'text-align': 'center', 'margin-bottom': '0px'}),
+                        dcc.RangeSlider(0, 19, 1, count=1, value=[0, 19], tooltip={"placement": "bottom", "always_visible": False}, id='model_selection'),
+                    ],
+                    style={'display': 'flex', 'flex-direction': 'column', 'justify-content': 'center', 'align-itens': 'center', 'width': '100vh'}
+                    )
+                ],
+                style={'display': 'flex', 'width': '100vh'}
                 ),
                 html.Div([
-                    html.P("Habilitar nova iteração", style={'margin': '0'}),
                     dcc.Checklist(
-                        id='toggleheatmap',
-                        options=[{'label': 'Exibir', 'value': 'show'}],
-                        value=[]
+                        id='iterations-checklist',
+                        options=[
+                            {'label': 'Iteração X', 'value': 'X'},
+                            {'label': 'Iteração Y', 'value': 'Y'}
+                        ],
+                        value=['X']  # Iteração X selecionada por padrão
                     ),
                 ], style={'display': 'flex', 'margin-top': '16px'}),
-                html.Div([
-                    dcc.Graph(id='heatmap-graph'),
-                    html.Div(id='novoheatmap')],
+                html.Div(
+                    id='graph-container',
                     style={'display': 'flex'}
                 )
             ], style={'display': 'flex', 'justify-content': 'center', 'flex-direction': 'column', 'align-items': 'center'}),
@@ -80,14 +93,28 @@ class Heatmap(WebvizPluginABC):
      
     def set_callbacks(self, app):
         @app.callback(
-        Output('heatmap-graph', 'figure'),
-        [Input('color-scale-dropdown', 'value'),
-        Input('filtro', 'value')]
+        Output('graph-container', 'children'),
+        [Input('iterations-checklist', 'value'),
+        Input('color-scale-dropdown', 'value'),
+        Input('filtro', 'value'),
+        Input('model_selection', 'value')]
         )
-        def update_figure(colorscale, selecao):
-            df_filter = df[selecao]
-            heatmap = HeatmapBuild(df_filter, colorscale=colorscale)
-            return heatmap.buildHeatmap()
+        def update_figure(iterations, colorscale, selecao, modelos):
+            #print(selecao)
+            selecao = sorted(selecao)
+            #print(selecao)
+            df_filter =  df.iloc[modelos[0]:modelos[1]+1, selecao]
+            print(modelos)
+
+            hovertext = [[f'Modelo: {df_filter.index[row]}, Poço: {col}, NQDS: {df_filter.iloc[row][col]:.2f}' for col in (df_filter.columns)] for row in range(df_filter.shape[0])]
+
+
+            graphs = []
+            for iteration in iterations:
+                heatmap = HeatmapBuild(df_filter, colorscale=colorscale, hovertext=hovertext)
+                graph = heatmap.buildHeatmap(id=f'heatmap-{iteration}')
+                graphs.append(graph)
+            return graphs
         
         @app.callback(
         Output('novoheatmap', 'children'),
@@ -98,6 +125,8 @@ class Heatmap(WebvizPluginABC):
         def toggle_extraheatmap(colorscale, value, selecao):
             if 'show' in value:
                 df_filter = df[selecao]
+                hovertext = [[f'Modelo: {df_filter.index[row]}, Poço: {df_filter.columns[col]}, NQDS: {df_filter[row][col]:.2f}' for col in range(cols)] for row in range(rows)]
+
                 heatmap = go.Heatmap(
                     z=df_filter,
                     colorscale=colorscale,

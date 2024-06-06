@@ -6,7 +6,7 @@ from dash import Dash, html, dcc, Input, Output
 # Classe para construir o Heatmap. Como estamos trabalhando com Heatmaps iguais, a classe encapsula a configuração dos gráficos.
 
 class HeatmapBuild:
-    def __init__(self, data, title='Poços x Modelos', colorscale='turbo', xaxis='Poços', yaxis='Modelos'):
+    def __init__(self, data, title='Poços x Modelos', colorscale='turbo', xaxis='Poços', yaxis='Modelos', hovertext=None):
         self.__data = data
         self.__title = title
         self.__colorscale = colorscale
@@ -21,6 +21,9 @@ class HeatmapBuild:
                 z=data,
                 colorscale=colorscale,
                 colorbar=dict(title='Precisão'),
+                hoverinfo='text',
+                hovertext=hovertext,
+                showlegend=False
                 )
 
 
@@ -36,7 +39,16 @@ class HeatmapBuild:
     def heatmap(self):
         return self.__heatmap
             
-    def buildHeatmap(self):
-        return go.Figure(
+    def buildHeatmap(self, id):
+        """
+        Builds a Heatmap in plotly.go and returns a dash component (dcc.Graph)\n
+        All Heatmap data and details are given in the class HeatmapBuild's initialization
+
+        :param id: id of the to-be built graph
+        :type id: str
+        :return: A Dash Graph component containing the heatmap.
+        """
+        figure = go.Figure(
                 data=[self.heatmap], layout=self.layout
             )
+        return dcc.Graph(id=id, figure=figure)

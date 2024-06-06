@@ -1,7 +1,10 @@
 title: NQDS Heatmap
 
-pages:
+assets:
+  css:
+    - assets/style.css
 
+pages:
   - title: NQDS Heatmap
     content:
       - Heatmap:

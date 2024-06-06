@@ -1,0 +1,19 @@
+body {
+    background-color: black;
+}
+
+.dropdown-filter {
+    width: 200px;
+}
+
+.filter-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 16px
+}
+
+.filter-column {
+    display: flex;
+    flex-direction: column;
+    margin-top: 200px
+}
