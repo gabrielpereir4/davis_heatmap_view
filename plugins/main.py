@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 from model.heatmapbuild import HeatmapBuild
+from model.data_handler import DataHandler
 
 
 rows = 20
@@ -17,6 +18,10 @@ data = np.random.rand(rows, cols)
 df = pd.DataFrame(data, columns=[x for x in range(0, 15)], index=[x for x in range(0, 20)])
 # Criar o texto de hover para cada célula do heatmap
 color_scales = px.colors.named_colorscales()
+
+dthandler = DataHandler()
+dthandler.SampleData()
+
 checklist_options = [{'label': column, 'value': int(column)} for column in df.columns]
 
 # go.Layout se refere a configurações de eixos, legendas, títulos do gráfico
@@ -40,12 +45,22 @@ class Heatmap(WebvizPluginABC):
 
         self.set_callbacks(app)
 
+    # Layout HTML da página
     @property
     def layout(self):
         return html.Div([
             html.Div([
-                html.H1("Gráfico Heatmap"),
-                html.P('Seleção de Cores:'),
+                html.H1("NQDS HEATMAP"),
+                html.Div([
+                    dcc.Tabs(id='data-selection', value='modelswells', 
+                            children=[
+                            dcc.Tab(label='Models by Wells', value='modelswells'),
+                            dcc.Tab(label='Attributes by Models', value='attributesmodels'),
+                            dcc.Tab(label='Wells by Attributes', value='wellsattributes')
+                        ],)
+                ],
+                style={'display': 'flex', 'justify-content': 'center'}),
+                html.P('Color Selection'),
                 dcc.Dropdown(
                 id='color-scale-dropdown',
                 options=[{'label': scale, 'value': scale} for scale in color_scales],
@@ -54,7 +69,7 @@ class Heatmap(WebvizPluginABC):
                 ),
                 html.Div([
                     html.Div([
-                        html.P("Seleção de Poços", style={'margin-bottom': '0px'}),
+                        html.P("Well Selection", style={'margin-bottom': '0px'}),
                         dcc.Checklist(
                             id='filtro',
                             options=checklist_options,
@@ -66,8 +81,8 @@ class Heatmap(WebvizPluginABC):
                     style={'display': 'flex', 'flex-direction': 'column', 'width': '200px'}
                     ),
                     html.Div([
-                        html.P("Seleção de Modelos", style={'text-align': 'center', 'margin-bottom': '0px'}),
-                        dcc.RangeSlider(0, 19, 1, count=1, value=[0, 19], tooltip={"placement": "bottom", "always_visible": False}, id='model_selection'),
+                        html.P("Model Selection", style={'text-align': 'center', 'margin-bottom': '0px'}),
+                        dcc.RangeSlider(1, 2, 1, count=1, value=[1, 2], tooltip={"placement": "bottom", "always_visible": False}, id='model_selection'),
                     ],
                     style={'display': 'flex', 'flex-direction': 'column', 'justify-content': 'center', 'align-itens': 'center', 'width': '100vh'}
                     )
@@ -78,8 +93,8 @@ class Heatmap(WebvizPluginABC):
                     dcc.Checklist(
                         id='iterations-checklist',
                         options=[
-                            {'label': 'Iteração X', 'value': 'X'},
-                            {'label': 'Iteração Y', 'value': 'Y'}
+                            {'label': 'Iteration X', 'value': 'X'},
+                            {'label': 'Iteration Y', 'value': 'Y'}
                         ],
                         value=['X']  # Iteração X selecionada por padrão
                     ),
@@ -87,7 +102,8 @@ class Heatmap(WebvizPluginABC):
                 html.Div(
                     id='graph-container',
                     style={'display': 'flex'}
-                )
+                ),
+                html.Button("Invert Axis", id='axis-inversion', n_clicks=0)
             ], style={'display': 'flex', 'justify-content': 'center', 'flex-direction': 'column', 'align-items': 'center'}),
         ], style={'height': '100vh'})
      
@@ -97,47 +113,52 @@ class Heatmap(WebvizPluginABC):
         [Input('iterations-checklist', 'value'),
         Input('color-scale-dropdown', 'value'),
         Input('filtro', 'value'),
-        Input('model_selection', 'value')]
+        Input('model_selection', 'value'),
+        Input('axis-inversion', 'n_clicks'),
+        Input('data-selection', 'value')]
         )
-        def update_figure(iterations, colorscale, selecao, modelos):
-            #print(selecao)
+        def update_figure(iterations, colorscale, selecao, modelos, axisinvertclicks, heatmap_selection):
             selecao = sorted(selecao)
-            #print(selecao)
-            df_filter =  df.iloc[modelos[0]:modelos[1]+1, selecao]
             print(modelos)
 
-            hovertext = [[f'Modelo: {df_filter.index[row]}, Poço: {col}, NQDS: {df_filter.iloc[row][col]:.2f}' for col in (df_filter.columns)] for row in range(df_filter.shape[0])]
+            if heatmap_selection == 'modelswells':
+                if axisinvertclicks % 2 == 1:
+                    df_filter = dthandler.TransposeData()
+                    graphtitle = 'Models by Wells'
+                    xaxis = 'Wells'
+                    yaxis = 'Models'
+                else:
+                    df_filter = dthandler.WellsModels()
+                    graphtitle = 'Wells by Models'
+                    yaxis = 'Wells'
+                    xaxis = 'Models'
 
+            elif heatmap_selection == 'attributesmodels':
+                if axisinvertclicks % 2 == 1:
+                    df_filter = dthandler.TransposeData()
+                    graphtitle = 'Models by Attributes'
+                    yaxis = 'Models'
+                    xaxis = 'Attributes'
+                else:
+                    df_filter = dthandler.AttributesModels()
+                    graphtitle = 'Attributes by Models'
+                    yaxis = 'Attributes'
+                    xaxis = 'Models'
+            elif heatmap_selection == 'wellsattributes':
+                    if axisinvertclicks % 2 == 1:
+                        df_filter = dthandler.TransposeData()
+                        graphtitle = 'Attributes by Wells'
+                        yaxis = 'Attributes'
+                        xaxis = 'Wells'
+                    else:
+                        df_filter = dthandler.WellsAttributes()
+                        graphtitle = 'Wells by Attributes'
+                        yaxis = 'Wells'
+                        xaxis = 'Attributes'                
 
             graphs = []
             for iteration in iterations:
-                heatmap = HeatmapBuild(df_filter, colorscale=colorscale, hovertext=hovertext)
+                heatmap = HeatmapBuild(df_filter, title=graphtitle, colorscale=colorscale, xaxis=xaxis, yaxis=yaxis, hovertext=dthandler.HoverText())
                 graph = heatmap.buildHeatmap(id=f'heatmap-{iteration}')
                 graphs.append(graph)
             return graphs
-        
-        @app.callback(
-        Output('novoheatmap', 'children'),
-        [Input('color-scale-dropdown', 'value'),
-        Input('toggleheatmap', 'value'),
-        Input('filtro', 'value')]
-        )
-        def toggle_extraheatmap(colorscale, value, selecao):
-            if 'show' in value:
-                df_filter = df[selecao]
-                hovertext = [[f'Modelo: {df_filter.index[row]}, Poço: {df_filter.columns[col]}, NQDS: {df_filter[row][col]:.2f}' for col in range(cols)] for row in range(rows)]
-
-                heatmap = go.Heatmap(
-                    z=df_filter,
-                    colorscale=colorscale,
-                    colorbar=dict(title='Precisão'),
-                    hovertext=hovertext
-
-                )
-                layout = heatmap_layout
-                return dcc.Graph(
-                    id='extra-heatmap-graph',
-                    figure={'data': [heatmap], 'layout': layout}
-                )
-            else:
-                return None

@@ -6,7 +6,7 @@ from dash import Dash, html, dcc, Input, Output
 # Classe para construir o Heatmap. Como estamos trabalhando com Heatmaps iguais, a classe encapsula a configuração dos gráficos.
 
 class HeatmapBuild:
-    def __init__(self, data, title='Poços x Modelos', colorscale='turbo', xaxis='Poços', yaxis='Modelos', hovertext=None):
+    def __init__(self, data, title='Models by Wells', colorscale='turbo', xaxis='Wells', yaxis='Models', hovertext=None):
         self.__data = data
         self.__title = title
         self.__colorscale = colorscale
@@ -14,13 +14,14 @@ class HeatmapBuild:
         self.__yaxis = yaxis
         self.__layout = go.Layout(
                 title= self.__title,
-                xaxis=dict(title= self.__xaxis),
-                yaxis=dict(title= self.__yaxis)
+                # Building the x and y axis "captions"
+                xaxis=dict(title= self.__xaxis, tickvals=list(range(len(self.data.columns))), ticktext=self.data.columns.tolist()),
+                yaxis=dict(title= self.__yaxis, tickvals=list(range(len(self.data.index))), ticktext=self.data.index.tolist())
             )
         self.__heatmap = go.Heatmap(
                 z=data,
                 colorscale=colorscale,
-                colorbar=dict(title='Precisão'),
+                colorbar=dict(title='Precision'),
                 hoverinfo='text',
                 hovertext=hovertext,
                 showlegend=False
@@ -48,6 +49,7 @@ class HeatmapBuild:
         :type id: str
         :return: A Dash Graph component containing the heatmap.
         """
+        print(self.data.columns.tolist())
         figure = go.Figure(
                 data=[self.heatmap], layout=self.layout
             )
