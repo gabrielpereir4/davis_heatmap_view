@@ -1,40 +1,18 @@
+# DAVis (Data Assimilation Visualization) Webviz Plugin
 
-EM DEV:
-    - Escolha do gráfico (FEITO!)
-    - Ajustar filtros para WxA e AxM (FEITO!)
-    - Adicionar funcionalidade dos filtros (FEITO!)
-    - QUESTÃO: Transposição dos gráficos está do melhor jeito...?
+The **DAVis Webviz Plugin** provides a Heatmap view for visualizing Data Assimilation steps in oil reserves exploration. It processes `.txt` files containing preformatted data, delivering an interactive and customizable visualization.
 
-    Nome dele agora é DAVis!
+## How to Use
 
-NOTAS:
-    - Filtros
-        Usar data handler
-        Como controlar para onde os dados do filtro vão (para o caso do gráfico estar transposto?)
-            - Quando os gráficos são transpostos, o índice se atualiza de acordo. Logo, na transposição, basta aplicar o filtro X em Y e vice versa.
+1. Build the plugin:
+   ```bash
+   webviz build project.yaml
 
-    16/12
-    Refazendo e organizando código. criando uma classe DataController como ponto central de controle da aplicação, que se comunica com todas as classes e com o main.py (aplicação)
-    - FilterBuilder completo
-    - PROXIMOS PASSOS: Adaptar criação do Heatmap. Desvincilhar a classe data handler.
-    - REIMPLEMENTAÇÃO FEITA!
+2. After building, upload a data file to the Upload File section, and wait for the plugin to process and return the view. After that,
+the view can be completely manipulated, according to the selectors and filters available on the screen.
 
+## Technical Aspects
 
-    18/12
-    - Implementar ordem ascendente, descendente
-    - Ranking melhores modelos?
-    - Limitador de modelos?
-    
-            
+The project follows an MVC-like architecture, where main.py is a view, and DataController is a controller class for interactions between the main view and model classes (which process and manipulates data as provided). 
 
-
-,
-                    '''
-                    html.Label('Attributes (Z)'),
-                    dcc.Checklist(
-                        id='Z-filter',
-                        options=[{'label': attribute, 'value': attribute} for attribute in attributes],
-                        value=attributes,
-                        inline=True,
-                    ),
-                    '''
+**NOTE**: There is a max_models parameter in DataLoader.get_data_from_file() method, which limits the amount of models loaded from the file provided by the user. The default value is set to None, which means the method loads an unlimited number of models. This parameter can be changed to limit this number and avoid performance or loading issues. A suggested improvement would be to allow the user to set this limit dynamically.
