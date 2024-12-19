@@ -1,2 +1,26 @@
+# Python
 __pycache__/
+*.py[cod]
 *.egg-info/
+*.egg
+dist/
+build/
+*.log
+
+# Virtual environments
+venv/
+.venv/
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+*.png
+
+assets/
+
+/model.egg-info
+
+*.txt

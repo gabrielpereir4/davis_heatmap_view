@@ -1,10 +1,6 @@
-title: NQDS Heatmap
-
-assets:
-  css:
-    - assets/style.css
+title: DAVis
 
 pages:
-  - title: NQDS Heatmap
+  - title: DAVis
     content:
       - Heatmap:
