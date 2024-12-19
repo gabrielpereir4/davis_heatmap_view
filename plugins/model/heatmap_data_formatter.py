@@ -28,7 +28,7 @@ class HeatmapDataFormatter():
         HeatmapDataFormatter.check_mode(mode)
         print(f'[HEATMAP_FORMATTER] Heatmap Mode: {mode}')
         
-        data['NQDS_value'] = data['NQDS_Value'].abs()
+        data['NQDS_Value'] = data['NQDS_Value'].abs()
         final_df = None
 
         if mode is HeatmapDataMode.AVG:
@@ -57,7 +57,7 @@ class HeatmapDataFormatter():
 
         HeatmapDataFormatter.check_mode(mode)
         
-        data['NQDS_value'] = data['NQDS_Value'].abs()
+        data['NQDS_Value'] = data['NQDS_Value'].abs()
         final_df = None
 
         if mode is HeatmapDataMode.AVG:
@@ -87,7 +87,7 @@ class HeatmapDataFormatter():
 
         HeatmapDataFormatter.check_mode(mode)
         
-        data['NQDS_value'] = data['NQDS_Value'].abs()
+        data['NQDS_Value'] = data['NQDS_Value'].abs()
         final_df = None
 
         if mode is HeatmapDataMode.AVG:
